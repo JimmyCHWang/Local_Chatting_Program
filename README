@@ -1,0 +1,33 @@
+This is the README file of CSE156/L Final Project assignment, written by Jingheng Wang (jwang280@ucsc.edu, NUMBER ID 1591816).
+
+Description of the assignment:
+The objective of this assignment is to create a TCP-based chat program composed of a client for the end users and a server program which will be used to connect clients so that they can exchange messages.
+
+To build the executable file:
+Run gmake in the main directory (i.e. parent directory of where the current file is). The main directory should contain three folders, doc, bin, src, and a file "Makefile".
+
+The sources are in the /src folder.
+The executable file build by gmake is in the /bin folder.
+
+Contents:
+
+Main Directory
+	/src
+		-- myclient.cpp (source file)
+		-- myserver.cpp (source file)
+		-- cse156.h (header file)
+		-- cse156.cpp (source file)
+		-- final_prot.h (header file)
+		-- final_prot.cpp (source file)
+
+	/bin
+		-- myclient (executable file)
+		-- myserver (executable file)
+
+	/doc
+		-- README (this file)
+		-- USER_GUIDE_CLIENT (documentation file)
+		-- USER_GUIDE_SERVER (documentation file)
+		-- USER_GUIDE_PROTOCOL (documentation file)
+
+	-- Makefile (gmake script)
