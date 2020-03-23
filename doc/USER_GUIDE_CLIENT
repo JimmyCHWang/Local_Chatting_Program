@@ -1,0 +1,42 @@
+myclient USER_GUIDE
+
+NAME
+	myclient - A chat end-user application
+
+SYNOPSIS
+	./myclient <IPV4_ADDRESS> <PORT_NUM> <YOUR_ALIAS>
+
+DESCRIPTION
+	This application works as an end-user application for the chatting program. Client connects to the server first, and can wait for connection, or connect another client.
+
+ARGUMENT_DESCRIPTION
+	<IPV4_ADDRESS>
+		A valid, dot-separated IPv4 address, indicating where "myserver" is running.
+		Example:
+			127.0.0.1
+
+	<PORT_NUM>
+		The port number, within the range of 0-65535, that the "myserver" application is listening.
+		Example:
+			5555
+			
+	<YOUR_ALIAS>
+		A client ID you want to use when exchanging information with the server and chatting with others. ID should only contain English letters A-Z, a-z and numbers 0-9 only.
+		
+COMMANDS
+	/quit - Terminates the program, no matter which state the client is in.
+	/list - Listing all waiting clients, available in INFO/WAIT state.
+	/wait - Tell the server you are waiting for connection, available in INFO state.
+	/connect <id> - Connects the user named <id>.
+	
+	/state - Shows the current state
+	
+	^C (Control + C) - Exits from WAIT or CHAT state, and back to INFO state.
+	^Z (Control + Z) - Forced quit.
+
+EXAMPLE_USAGE
+	./myclient 127.0.0.1 1234 alice
+
+AUTHOR
+	Jingheng Wang (Jimmy Wang)
+	jwang280@ucsc.edu

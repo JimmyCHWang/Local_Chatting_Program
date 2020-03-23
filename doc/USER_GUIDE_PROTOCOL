@@ -1,0 +1,106 @@
+FPCP USER_GUIDE
+
+NAME
+	Final Project Communication Protocol - Protocol dedicated for CSE156/L W20 Final Project
+
+DESCRIPTION
+	The protocol is used for my CSE156/L W20 Final Project, the chatting program. It is used between the client and the server to exchange information, and also communications between the clients when they are chatting.
+	The protocol defined a fixed-length packet. Each packet must follow the same rules defined in the next section.
+	There are three types of messages. Packets with opcode 0x0? refers to a packet sent from client to the server. Packets with opcode 0x1? refers to a packet sent from server back to the client. Packets with opcode 0x2? are used between client communications. The details are defined in the following sections.
+
+PACKET_DESCRIPTION
+
+struct packet_t {
+	uint8_t opcode;
+	uint8_t from_id;
+	uint8_t to_id;
+	uint8_t flag;
+	struct sockaddr_in addr; 
+	uint32_t text_len;
+	char text[MAX_TEXT_LEN];
+}
+
+opcode is an 8-bit number, indicating the operation code of this packet. The detaied description can be found in the following sections.
+
+from_id and to_id are two 8-bit numbers. The id is not "Client ID" specified in the assignment. It is a number ID assigned by the server when they logged in to the server. Number ID 0 and 255 are reserved. 0 is the server. 255 only appears under special circumstances.
+
+Flag is an 8-bit number. This number is used in 1 situation(s).
+	1) When a large message is going to sent but needs fragmentation. A value of 0 indicating this packet is not the final packet. A value 1 means the message is end and the current packet is the last one. Ideally, this would only be used between client-client communications when an extremely long message is going to send. 
+	[THIS IS NOT IMPLEMENTED RIGHT NOW, SO ALL MESSAGES SHOULD LIMITED INTO ONLY ONE PACKET LENGTH]
+
+addr is a "struct sockaddr_in" type field, used only between client and server communications. When a client A needs to connect to another client B, it would first send a message "CLIENT_CONNECT" to server. The server would then sends back B's sockaddr_in address to A, such that A can connect with B.
+
+text_len is a 32-bit number, indicating the valid text length in text field.
+
+text field is containing various types of texts. It could be "Client ID" (specified in the assignment), the text message between clients, and also some message exchanges between the client and server.
+
+OPCODE_DESCRIPTION
+
+	SECTION I. Client to Server (0x0?)
+		- 0x01 - LOGIN
+			Sending login information to the server. Request a number ID to exchange connections. The text field should be the Client ID (the name). From_ID should be set to 255, indicating the client was not assigned an ID yet. Expected a 0x11 if login is succeed, or a 0x15 if login is rejected. If 0x15, client exits.
+
+		- 0x02 - REQUEST LIST
+			Requesting the waiting list from the server. Expected a 0x12 reply.
+
+		- 0x03 - CLIENT ID RESOLUTION
+			Sending a Client ID / Number ID to the server, requesting for the address of another client. If Number ID is used (in to_id field), text field should be empty. If Client ID is used, to_id field should be set to 255. Expected a 0x13 reply.
+
+		- 0x04 - STATE REPLY [NOT IMPLEMENTED]
+			In case that the client receives a Server's State Request, the client shall reply its current state. 
+
+		- 0x05 - WAIT TO CONNECT
+			Indicating its state has changed from INFO to WAIT. The Client also sends the server its listening address. No need to receive reply from server in this case.
+
+		- 0x06 - CONNECTION ESTABLISHED
+			Indicating the client has established a connection. the state has turned from WAIT/INFO to CHAT. No need to receive reply from server in this case. 
+
+		- 0x07 - CONNECTION TERMINATED
+			Indicating the client's connection is finished. the state has turned from CHAT to INFO. No need to receive reply from server in this case.
+
+		- 0x08 - REMOVE FROM WAITLIST
+			The Client pressed Control-C and state turned from WAIT TO INFO. No need to receive reply from server in this case. 		[CURRENTLY REPLACED BY 0x07]
+		
+		- 0x0F - QUIT
+			The Client entered /quit in any state, sending a packet to server indicating the program is terminated. Also if in CHAT state, will send a 0x24 packet to the chatting client. No need to receive reply from server/client in this case.
+
+
+	SECTION II. Server to Client (0x1?)
+		- 0x11 - LOGGED IN CONFIRMED
+			As a response to 0x01, sends out a 0x11 with the client's Number ID in to_id. No packets expected in return.
+
+		- 0x12 - WAITING LIST REPLY
+			As a resopnse to 0x02, sends out the current waiting list in text field. No packets expected in return.
+
+		- 0x13 - CLIENT ID REPLY
+			As a response to 0x03, sends out a 0x13 with 3 information provided. from_id set to the requested client's Number ID. addr set to the requested client's sockaddr_in address. text set to the requested client's Client ID. If not found the from_id will be set to 255. No packets expected in return.
+
+		- 0x14 - STATE REQUEST [NOT IMPLEMENTED]
+			The server wants to know the state of Client right now. Client should reply a 0x04 packet, with its state indicating in the text field. This could be also used as a HEARTBEAT package, checking if the client is online or not. Expects a 0x04 packet with its state.
+
+		- 0x15 - LOGIN REJECTED
+			As a response to 0x01, when the Client ID the client wants to use has a conflict (another user has already used this ID), it rejects the login. No Number ID is assigned in this case. No packets expected in return.
+
+	
+	SECTION III. Client to Client (0x2?)
+		- 0x21 - REQUEST CONNECT
+			Happens after a /connect command is given. A 0x03 packet will be sent to Server first to reach the target client's address. A 0x21 packet will then send to the target client's address, with its Client ID in text field. Expected to receive a 0x22 packet, if successed, or a 0x25 packet, if rejected.
+		
+		- 0x22 - CONNECT ACCEPTED
+			When a client is in WAIT state, and received an 0x21 packet from another, it accepts the connection and sends back 0x22. No packets expected in return.
+
+		- 0x23 - MESSAGE TRANSMIT
+			A client sends to its peer when a message is entered, a 0x23 packet is sent to the peer with the message in the text field. No packets expected in return.
+
+		- 0x24 - CONNECTION TERMINATE
+			A client sends to its peer when hits Control-C, indicating the chat is terminated. A 0x07 packet should also sent to the server. No packets expected in return.
+
+		- 0x25 - CONNECT REJECTED [DESIGNED BUT NOT IMPLEMENTED]
+			When the client is already in CHAT state, and another connection is coming, the client will first accept the connection, reads 0x21 connection, but send a 0x25 packet back, and close the connection. This packet indicates the client is busy. The request client must also close the connection.
+		[ALTERNATIVE SOLUTION] Two sockets: Listening Socket, and Connection Socket (connfd = accept()) When a client is accepted, it turned off its listening socket.
+
+
+
+AUTHOR
+	Jingheng Wang (Jimmy Wang)
+	jwang280@ucsc.edu

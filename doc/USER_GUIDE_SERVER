@@ -1,0 +1,29 @@
+myserver USER_GUIDE
+
+NAME
+	myserver - A chat server application
+
+SYNOPSIS
+	./myserver <PORT_NUM>
+
+DESCRIPTION
+	This application works as an server application for the chatting program. Server connectes to the clients, assigning codes, provides list of currently waiting clients, and also do an address resolution when one client wants to connect another.
+
+ARGUMENT_DESCRIPTION
+
+	<PORT_NUM>
+		The port number, within the range of 0-65535, that the "myserver" application is listening.
+		Example:
+			5555
+	
+COMMANDS
+	
+	^C (Control + C) - Prints out the debug message. It will list all clients currently connecting with the server, with their ID and states.
+	^Z (Control + Z) - Forced quit.
+
+EXAMPLE_USAGE
+	./myserver 5555
+
+AUTHOR
+	Jingheng Wang (Jimmy Wang)
+	jwang280@ucsc.edu
