@@ -11,6 +11,7 @@ typedef struct ClientInfo_t {
 	char client_id[MAX_ID_LENGTH];
 	int sockfd;
 	states state;
+	SA cli_addr;
 	SA addr; // Address only for Chat
 } Clinfo;
 
@@ -33,7 +34,8 @@ void sig_handler(int signo) {
 		for (int i = 0; i < MAX_CLIENTS; i++) {
 			if (clinfo[i].valid) {
 				cnt++;
-				fprintf(stderr, "ID = %d; Name = %s; state = %d;\n", clinfo[i].id, clinfo[i].client_id, clinfo[i].state);
+				fprintf(stderr, "ID = %d; Name = %s; state = %d; Addr = ", clinfo[i].id, clinfo[i].client_id, clinfo[i].state);
+				print_addr(clinfo[i].cli_addr);
 			}
 		}
 		fprintf(stderr, "Total Valid Users: %d\n", cnt);
@@ -100,6 +102,7 @@ int main(int argc, char* argv[]) {
 		clinfo[vacant].valid = true;
 		clinfo[vacant].id = vacant+1;
 		clinfo[vacant].sockfd = cli_socket;
+		clinfo[vacant].cli_addr = cli_addr;
 		clinfo[vacant].state = INFO;
 
 		printf("Server> Incoming new user, assigned ID %d.\n", vacant);
@@ -232,7 +235,8 @@ void* thread_module (void* argv) {
 			case (0x05):{
 				cinfo->state = WAIT;
 				printf("Thread %d> Changed State: WAIT\n", cinfo->id-1);
-				cinfo->addr = cli_packet.addr;
+				cinfo->addr = cinfo->cli_addr;
+				(cinfo->addr).sin_port = (cli_packet->addr).sin_port;
 				printf("Thread %d> Received Address: ", cinfo->id-1);
 				print_addr(cli_packet.addr);
 				break;}
